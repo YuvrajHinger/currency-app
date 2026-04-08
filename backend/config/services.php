@@ -35,4 +35,11 @@ return [
         ],
     ],
 
+    'currency' => [
+        'url' => env('CURRENCY_API_URL'),
+        'key' => env('CURRENCY_API_KEY'),
+        'source' => env('CURRENCY_API_SOURCE', 'USD'),
+        'dry_run' => env('CURRENCY_API_DRY_RUN', false),
+    ],
+
 ];
