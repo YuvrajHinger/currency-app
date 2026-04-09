@@ -13,7 +13,7 @@ use App\Services\CurrencyService;
 
 class ApiFullTest extends TestCase
 {
-        use RefreshDatabase;
+    use RefreshDatabase;
 
     /** ----------------------- AUTH TESTS ----------------------- */
 
