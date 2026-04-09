@@ -10,3 +10,5 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::job(new GenerateReportJob)->everyFifteenMinutes();
+// execute now
+Schedule::job(new GenerateReportJob)->everyMinute();
