@@ -35,7 +35,20 @@ class ReportController extends Controller
      */
     public function index()
     {
-        return auth()->user()->reports()->with('data')->get();
+        return auth()->user()->reports()->orderBy('created_at', 'desc')->get();
+    }
+
+    /**
+     * Show a specific report
+     */
+    public function show(Report $report)
+    {
+        // Ensure the report belongs to the authenticated user
+        if ($report->user_id !== auth()->id()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        return $report->load('data'); // Load related data if needed
     }
         
 }
