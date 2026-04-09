@@ -139,3 +139,5 @@ npm run dev
 - **Environment**: Copy `.env.example` to `.env` before running
 - **API Base URL**: Frontend communicates with backend API at `/api`
 - **CORS**: Ensure frontend and backend are on compatible URLs
+
+![Demo Video](screen-capture-2026-04-09t170022731_2L35PhEd (1).mkv)
