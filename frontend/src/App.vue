@@ -2,7 +2,7 @@
   <v-app>
     <!-- App Bar -->
     <v-app-bar app color="primary" dark>
-      <!-- ✅ Hamburger -->
+      <!-- Hamburger -->
       <v-app-bar-nav-icon @click="drawer = !drawer" />
 
       <v-app-bar-title>Currency Conversion Rates</v-app-bar-title>
