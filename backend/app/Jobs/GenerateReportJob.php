@@ -25,16 +25,20 @@ class GenerateReportJob implements ShouldQueue
                 // Step 1: Determine date range
                 [$startDate, $endDate] = $this->getDateRange($report->range);
 
-                // Step 2: Generate interval dates
-                $dates = $this->generateDates($startDate, $endDate, $report->interval);
+                // Step 2: Fetch base rate (current)                
+                $data = $this->fetchTimeframeRates(
+                    $currencyService,
+                    $report->currency,
+                    $startDate,
+                    $endDate
+                );
 
-                // Step 3: Fetch base rate (current)
-                $rate = $this->fetchCurrentRate($currencyService, $report->currency);
+                $filteredData = $this->filterByInterval($data['quotes'], $report->interval);                
 
-                // Step 4: Insert data
-                $this->storeReportData($report->id, $dates, $rate);
+                // Step 3: Insert data
+                $this->storeReportData($report->id, $filteredData);
 
-                // Step 5: Mark completed
+                // Step 4: Mark completed
                 $report->update(['status' => 'completed']);
             } catch (\Throwable $e) {
                 // Optional: mark failed
@@ -45,25 +49,29 @@ class GenerateReportJob implements ShouldQueue
         }
     }
 
-    private function fetchCurrentRate(CurrencyService $currencyService, string $currency): float
+    private function fetchTimeframeRates(CurrencyService $currencyService, string $currency, $startDate, $endDate)
     {
-        $response = $currencyService->getRates([$currency]);
-
-        return $response['quotes']['USD' . $currency] ?? 1;
+        return $currencyService->getTimeframeRates(
+            $currency,
+            $startDate->toDateString(),
+            $endDate->toDateString()
+        );
     }
 
-    private function storeReportData(int $reportId, array $dates, float $rate): void
+    private function storeReportData(int $reportId, array $data): void
     {
         $rows = [];
 
-        foreach ($dates as $date) {
-            $rows[] = [
-                'report_id' => $reportId,
-                'date' => $date,
-                'rate' => $rate,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ];
+        foreach ($data as $date => $rateData) {
+            foreach ($rateData as $pair => $rate) {
+                $rows[] = [
+                    'report_id' => $reportId,
+                    'date' => $date,
+                    'rate' => $rate,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+            }
         }
 
         ReportData::insert($rows);
@@ -80,22 +88,25 @@ class GenerateReportJob implements ShouldQueue
         };
     }
 
-    private function generateDates($start, $end, $interval)
+    private function filterByInterval(array $quotes, string $interval): array
     {
-        $dates = [];
-        $current = $start->copy();
+        $result = [];
+        foreach ($quotes as $date => $rateData) {
 
-        while ($current <= $end) {
-            $dates[] = $current->toDateString();
+            $carbonDate = \Carbon\Carbon::parse($date);
 
-            match ($interval) {
-                'monthly' => $current->addMonth(),
-                'weekly' => $current->addWeek(),
-                'daily' => $current->addDay(),
-            };
+            if ($interval === 'daily') {
+                $result[$date] = $rateData;
+
+            } elseif ($interval === 'weekly' && $carbonDate->dayOfWeek === 1) {
+                $result[$date] = $rateData;
+
+            } elseif ($interval === 'monthly' && $carbonDate->day === 1) {
+                $result[$date] = $rateData;
+            }                        
         }
 
-        return $dates;
+        return $result;
     }
 
 }
