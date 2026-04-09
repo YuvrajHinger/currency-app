@@ -140,7 +140,4 @@ npm run dev
 - **API Base URL**: Frontend communicates with backend API at `/api`
 - **CORS**: Ensure frontend and backend are on compatible URLs
 
-![Demo Video](screen-capture-2026-04-09t170022731_2L35PhEd (1).mp4)
-<video width="600" controls>
-  <source src="vid.mp4" type="video/mp4">  
-</video>
+[Download/View the video](https://github.com/YuvrajHinger/currency-app/raw/main/vid.mp4)
