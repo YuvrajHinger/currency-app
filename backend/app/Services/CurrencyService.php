@@ -72,6 +72,33 @@ class CurrencyService
     }
 
     /**
+     * Get historical rates for a timeframe
+     */
+    public function getTimeframeRates(string $currency, string $startDate, string $endDate, bool $dryRunOverride = false): array
+    {
+        $isDryRun = $dryRunOverride || $this->dryRun;
+
+        if ($isDryRun) {
+            return [
+                'success' => true,
+                'source' => $this->source,
+                'quotes' => $this->simulateTimeframeRates($currency, $startDate, $endDate),
+                'dry_run' => true
+            ];
+        }
+
+        $response = Http::get($this->baseUrl . '/timeframe', [
+            'access_key' => $this->apiKey,
+            'start_date' => $startDate,
+            'end_date'   => $endDate,
+            'currencies' => $currency,
+            'source'     => $this->source            
+        ]);
+
+        return $response->json();
+    }
+
+    /**
      * Simulated rates for dry run
      */
     private function simulateRates(array $currencies): array
@@ -84,5 +111,35 @@ class CurrencyService
         }
 
         return $rates;
+    }
+
+    /**
+     * Simulate historical rates for a timeframe (dry run)
+     */
+    private function simulateTimeframeRates(string $currency, string $startDate, string $endDate): array
+    {
+        $quotes = [];
+        $start = \Carbon\Carbon::parse($startDate);
+        $end = \Carbon\Carbon::parse($endDate);
+        $pair = $this->source . strtoupper($currency);
+
+        $current = $start->copy();
+
+        // Initialize starting rate
+        $rate = round(mt_rand(50, 100) + mt_rand(0, 99)/100, 4);
+
+        while ($current <= $end) {
+            // Small daily fluctuation ±0.5%
+            $fluctuation = ($rate * 0.005) * (mt_rand(-100, 100) / 100);
+            $rate = max(1, $rate + $fluctuation); // avoid going below 1
+
+            $quotes[$current->toDateString()] = [
+                $pair => round($rate, 4)
+            ];
+
+            $current->addDay();
+        }
+
+        return $quotes;
     }
 }
