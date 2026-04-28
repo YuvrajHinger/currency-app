@@ -90,7 +90,7 @@ php artisan queue:work
 **Schedule Processing** (in another terminal):
 ```bash
 cd backend
-php artisan schedule:run
+php artisan schedule:work
 ```
 
 **Frontend** (in another terminal):
